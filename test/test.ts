@@ -1,58 +1,107 @@
-import { TypeMerge } from "type-functions/objects";
-// type MakeTupleImpl<
-//   Len extends number,
-//   T extends [...any]
-// > = T["length"] extends Len ? T : MakeTupleImpl<Len, [undefined, ...T]>;
-// type MakeTuple<Len extends number> = MakeTupleImpl<Len, []>;
+type PlusOne<T extends string> = `1${T}`;
+type SubtractOne<T extends string> = T extends `1${infer RemainderT}`
+  ? RemainderT
+  : Zero;
+type Plus<A extends string, B extends string> = B extends Zero
+  ? A
+  : Plus<PlusOne<A>, SubtractOne<B>>;
 
-// type Zero = 0;
-// type One = Increase<Zero>; // 1
-// type Two = Increase<One>; // 2
-// type Three = Increase<Two>; // 3
+type Zero = "";
+type One = PlusOne<Zero>;
+type Two = Plus<One, One>;
+type Three = PlusOne<Two>;
+type Four = Plus<Two, Two>;
+type Five = PlusOne<Four>;
+type Six = PlusOne<Five>;
+type Seven = PlusOne<Six>;
+type Eight = Plus<Four, Four>;
+type Nine = PlusOne<Eight>;
+type Ten = Plus<Eight, Two>;
+type Sixteen = Plus<Eight, Eight>;
 
-// type Test3_2 = EqualTest<Decrease<Three>, Two>; // true
-// type Test2_1 = EqualTest<Decrease<Two>, One>; // true
-// type Test1_0 = EqualTest<Decrease<One>, Zero>; // true
+type PowerOfTwoImpl<
+  Sum extends string = One,
+  Count extends string = Zero
+> = Count extends Zero
+  ? Sum
+  : PowerOfTwoImpl<Plus<Sum, Sum>, SubtractOne<Count>>;
+type PowerOfTwo<N extends string> = PowerOfTwoImpl<PlusOne<One>, N>;
+type N512 = PowerOfTwo<Nine>;
 
-// type Five = Plus<3, 2>; // 5
-// type Eight = Plus<5, 3>; // 8
+type TimesImpl<
+  A extends string,
+  B extends string,
+  C extends string
+> = B extends Zero ? C : TimesImpl<A, SubtractOne<B>, Plus<C, A>>;
+type Times<A extends string, B extends string> = TimesImpl<A, B, Zero>;
+type Twelve = Times<Three, Four>;
+type Forty = Times<Five, Eight>;
 
-// type SubtractTestsImpl<A extends number, Bs extends number> = {
-//   [B in Bs as `${A}-${B}`]: Subtract<A, B>;
-// };
+type DigitMap = [
+  Zero,
+  One,
+  Two,
+  Three,
+  Four,
+  Five,
+  Six,
+  Seven,
+  Eight,
+  Nine,
+  Ten
+];
 
-// type SubtractTests = SubtractTestsImpl<
-//   10,
-//   1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11
-// >;
+type StrToNumImpl<
+  Str extends string,
+  SumValue extends string
+> = Str extends Zero
+  ? SumValue
+  : Str extends `0${infer RestStr}`
+  ? StrToNumImpl<RestStr, Plus<Times<SumValue, Ten>, DigitMap[0]>>
+  : Str extends `1${infer RestStr}`
+  ? StrToNumImpl<RestStr, Plus<Times<SumValue, Ten>, DigitMap[1]>>
+  : Str extends `2${infer RestStr}`
+  ? StrToNumImpl<RestStr, Plus<Times<SumValue, Ten>, DigitMap[2]>>
+  : Str extends `3${infer RestStr}`
+  ? StrToNumImpl<RestStr, Plus<Times<SumValue, Ten>, DigitMap[3]>>
+  : Str extends `4${infer RestStr}`
+  ? StrToNumImpl<RestStr, Plus<Times<SumValue, Ten>, DigitMap[4]>>
+  : Str extends `5${infer RestStr}`
+  ? StrToNumImpl<RestStr, Plus<Times<SumValue, Ten>, DigitMap[5]>>
+  : Str extends `6${infer RestStr}`
+  ? StrToNumImpl<RestStr, Plus<Times<SumValue, Ten>, DigitMap[6]>>
+  : Str extends `7${infer RestStr}`
+  ? StrToNumImpl<RestStr, Plus<Times<SumValue, Ten>, DigitMap[7]>>
+  : Str extends `8${infer RestStr}`
+  ? StrToNumImpl<RestStr, Plus<Times<SumValue, Ten>, DigitMap[8]>>
+  : Str extends `9${infer RestStr}`
+  ? StrToNumImpl<RestStr, Plus<Times<SumValue, Ten>, DigitMap[9]>>
+  : never;
 
-// type TimesTestImpl<A extends number, Bs extends number> = {
-//   [B in Bs as `${A} * ${B}`]: Times<A, B>;
-// };
+type FirstChar<T extends string> = T extends `${infer HeadChar}${infer _}`
+  ? HeadChar
+  : never;
 
-// type TimesTests = TimesTestImpl<6, 1 | 2 | 3 | 4 | 5>;
-// enum A {
-//   value = -1,
-// }
-// type B = A.value;
-// type Te = B extends -1 ? true : false;
+type RestStr<T extends string> = T extends `${infer _}${infer R}` ? R : never;
 
-// type Foo = {
-//   foo: number[];
-//   foo1: string[][];
-//   foo2: boolean;
-//   foo3: { b: boolean };
-// };
-// type Bar = { foo: object; foo1: number[] };
+type StrToChars<T extends string> = T extends ""
+  ? []
+  : FirstChar<T> extends string
+  ? RestStr<T> extends string
+    ? [FirstChar<T>, ...StrToChars<RestStr<T>>]
+    : [FirstChar<T>]
+  : [];
 
-// type Foo_Bar = TypeMerge<Foo, Bar>;
+type StrToNum<Str extends string> = StrToNumImpl<Str, Zero> extends string
+  ? StrToChars<StrToNumImpl<Str, Zero>>["length"]
+  : never;
 
-type Foo = {
-  foo: number[];
-  foo1: string[][];
-  foo2: boolean;
-  foo3: { b: boolean };
-};
-type Bar = { foo: object; foo1: number[] };
-
-type Foo_Bar = TypeMerge<Foo, Bar>;
+type S0 = StrToNum<"0">; // 0
+type S1 = StrToNum<"1">; // 1
+type S2 = StrToNum<"2">; // 2
+type S3 = StrToNum<"3">; // 3
+type S21 = StrToNum<"21">; // 21
+type S22 = StrToNum<"22">; // 22
+type S23 = StrToNum<"23">; // 23
+type S24 = StrToNum<"24">; // 24
+type S123 = StrToNum<"40">; // 40
