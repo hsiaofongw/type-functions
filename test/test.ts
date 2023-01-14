@@ -1,3 +1,4 @@
+import { TypeMerge } from "type-functions/objects";
 // type MakeTupleImpl<
 //   Len extends number,
 //   T extends [...any]
@@ -45,3 +46,13 @@
 // type Bar = { foo: object; foo1: number[] };
 
 // type Foo_Bar = TypeMerge<Foo, Bar>;
+
+type Foo = {
+  foo: number[];
+  foo1: string[][];
+  foo2: boolean;
+  foo3: { b: boolean };
+};
+type Bar = { foo: object; foo1: number[] };
+
+type Foo_Bar = TypeMerge<Foo, Bar>;
